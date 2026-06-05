@@ -1,0 +1,126 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+
+local Enabled = false
+local Range = 18
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "SwordAuraGUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+
+local Main = Instance.new("Frame")
+Main.Parent = ScreenGui
+Main.Size = UDim2.new(0, 260, 0, 170)
+Main.Position = UDim2.new(0.5, -130, 0.5, -85)
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.BorderSizePixel = 0
+Main.Active = true
+Main.Draggable = true
+
+local Corner = Instance.new("UICorner", Main)
+Corner.CornerRadius = UDim.new(0, 10)
+
+local Title = Instance.new("TextLabel")
+Title.Parent = Main
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.BackgroundTransparency = 1
+Title.Text = "Sword Aura"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBold
+
+local Toggle = Instance.new("TextButton")
+Toggle.Parent = Main
+Toggle.Size = UDim2.new(0, 220, 0, 40)
+Toggle.Position = UDim2.new(0, 20, 0, 55)
+Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Toggle.Text = "Aura: OFF"
+Toggle.TextColor3 = Color3.fromRGB(255,255,255)
+Toggle.TextScaled = true
+Toggle.Font = Enum.Font.GothamBold
+Toggle.BorderSizePixel = 0
+
+local ToggleCorner = Instance.new("UICorner", Toggle)
+ToggleCorner.CornerRadius = UDim.new(0, 8)
+
+local RangeBox = Instance.new("TextBox")
+RangeBox.Parent = Main
+RangeBox.Size = UDim2.new(0, 220, 0, 40)
+RangeBox.Position = UDim2.new(0, 20, 0, 110)
+RangeBox.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+RangeBox.PlaceholderText = "Enter Range"
+RangeBox.Text = tostring(Range)
+RangeBox.TextColor3 = Color3.fromRGB(255,255,255)
+RangeBox.PlaceholderColor3 = Color3.fromRGB(180,180,180)
+RangeBox.TextScaled = true
+RangeBox.Font = Enum.Font.Gotham
+RangeBox.BorderSizePixel = 0
+
+local BoxCorner = Instance.new("UICorner", RangeBox)
+BoxCorner.CornerRadius = UDim.new(0, 8)
+
+Toggle.MouseButton1Click:Connect(function()
+	Enabled = not Enabled
+	
+	if Enabled then
+		Toggle.Text = "Aura: ON"
+		Toggle.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+	else
+		Toggle.Text = "Aura: OFF"
+		Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+	end
+end)
+
+RangeBox.FocusLost:Connect(function()
+	local Number = tonumber(RangeBox.Text)
+	
+	if Number then
+		Range = Number
+	else
+		RangeBox.Text = tostring(Range)
+	end
+end)
+
+RunService.RenderStepped:Connect(function()
+	if not Enabled then
+		return
+	end
+	
+	local Character = LocalPlayer.Character
+	if not Character then
+		return
+	end
+	
+	local Tool = Character:FindFirstChildOfClass("Tool")
+	if not Tool or not Tool:FindFirstChild("Handle") then
+		return
+	end
+	
+	for _, Plr in pairs(Players:GetPlayers()) do
+		if Plr ~= LocalPlayer and Plr.Team ~= LocalPlayer.Team then
+			
+			local Enemy = Plr.Character
+			
+			if Enemy
+			and Enemy:FindFirstChild("Humanoid")
+			and Enemy.Humanoid.Health > 0
+			and Enemy:FindFirstChild("HumanoidRootPart") then
+				
+				local Distance = LocalPlayer:DistanceFromCharacter(
+					Enemy.HumanoidRootPart.Position
+				)
+				
+				if Distance <= Range then
+					Tool:Activate()
+					
+					Tool.Handle.Massless = true
+					Tool.Handle.Position = Enemy.HumanoidRootPart.Position
+				end
+			end
+		end
+	end
+end)
